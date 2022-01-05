@@ -27,7 +27,7 @@ counter.set(0);
 System.out.println("starting concurrent:");
 Tasks.group(g -> {
     for(int i = 0; i < N; i++) {
-       g.async(()-> slowIncrement.run()); // runs concurrently
+       g.async(slowIncrement); // runs concurrently
     }
 }).await();
 ```
