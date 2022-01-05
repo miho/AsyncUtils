@@ -19,7 +19,8 @@ Runnable slowIncrement = () -> {
 System.out.println("starting sequential:");
 for(int i = 0; i < N; i++) {
     slowIncrement.run();                  // runs sequentially
- }
+}
+ 
 counter.set(0);
 
 // concurrent
