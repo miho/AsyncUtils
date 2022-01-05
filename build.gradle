@@ -1,0 +1,54 @@
+// enable intellij integration & load vmf version to be used
+buildscript {
+
+    ext.vmfPluginIntelliJIntegration = true
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "eu.mihosoft.vmf:vmf-gradle-plugin:0.2.8.3"
+    }
+}
+
+plugins {
+    id 'java'
+}
+
+// load plugins
+apply plugin: 'eu.mihosoft.vmf'
+
+// set dependencies for intellij editor (otherwise vmf dir would be ignored)
+idea {
+    module {
+        dependencies {
+            implementation group: 'eu.mihosoft.vmf', name: 'vmf', version: '0.2.8.3'
+        }
+    }
+}
+
+// configure java build
+sourceCompatibility = '17'
+targetCompatibility = '17'
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+wrapper {
+    gradleVersion '7.3.3'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+}
+
+test {
+    useJUnitPlatform()
+}
