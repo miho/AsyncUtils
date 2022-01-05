@@ -30,4 +30,6 @@ Tasks.group(g -> {
        g.async(slowIncrement); // runs concurrently
     }
 }).await();
+
+// continues after all tasks have been executed
 ```
