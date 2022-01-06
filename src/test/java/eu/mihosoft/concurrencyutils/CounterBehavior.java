@@ -1,7 +1,6 @@
 package eu.mihosoft.concurrencyutils;
 
 import eu.mihosoft.vmf.runtime.core.DelegatedBehaviorBase;
-import eu.mihosoft.vmfactors.Counter;
 
 public class CounterBehavior extends DelegatedBehaviorBase<Counter> {
 

@@ -8,13 +8,13 @@ interface Counter {
 
     int getValue();
 
-    @DelegateTo(className = "eu.mihosoft.vmfactors.CounterBehavior")
+    @DelegateTo(className = "eu.mihosoft.concurrencyutils.CounterBehavior")
     void inc();
 
-    @DelegateTo(className = "eu.mihosoft.vmfactors.CounterBehavior")
+    @DelegateTo(className = "eu.mihosoft.concurrencyutils.CounterBehavior")
     void dec();
 
-    @DelegateTo(className = "eu.mihosoft.vmfactors.CounterBehavior")
+    @DelegateTo(className = "eu.mihosoft.concurrencyutils.CounterBehavior")
     void reset();
 
     @Container(opposite = "counter")

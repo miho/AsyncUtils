@@ -3,6 +3,9 @@ package eu.mihosoft.concurrencyutils;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * Task executor.
+ */
 public final class Executor {
     private final BlockingQueue<Task<?>> queue;
     private final int numThreads;
@@ -24,6 +27,9 @@ public final class Executor {
         this(numThreads, Integer.MAX_VALUE);
     }
 
+    /**
+     * Starts this executor.
+     */
     public void start() {
         lock.lock();
         try {
@@ -36,6 +42,12 @@ public final class Executor {
         }
     }
 
+    /**
+     * Creates a new executor.
+     * @param numThreads
+     * @param bufferSize
+     * @return
+     */
     public static Executor newInstance(int numThreads, int bufferSize) {
         return new Executor(numThreads, bufferSize);
     }

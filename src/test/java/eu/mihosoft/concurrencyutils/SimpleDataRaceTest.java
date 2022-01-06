@@ -1,9 +1,6 @@
 package eu.mihosoft.concurrencyutils;
 
-import eu.mihosoft.concurrencyutils.Executor;
-import eu.mihosoft.concurrencyutils.GenericActor;
-import eu.mihosoft.concurrencyutils.Tasks;
-import eu.mihosoft.vmfactors.Counter;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
