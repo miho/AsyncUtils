@@ -1,5 +1,6 @@
 package eu.mihosoft.concurrencyutils;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.text.SimpleDateFormat;
@@ -28,11 +29,14 @@ public class TaskGroupTest {
                 .format(new Date()) + "]: " + value);
         };
 
+        long t1 = System.nanoTime();
         // sequential
         System.out.println("starting sequential:");
         for(int i = 0; i < N; i++) {
             slowIncrement.run();                  // runs sequentially
         }
+
+        long t2 = System.nanoTime();
 
         counter.set(0);
 
@@ -43,6 +47,14 @@ public class TaskGroupTest {
                g.async(slowIncrement); // runs concurrently
             }
         }).await();
+
+        long t3 = System.nanoTime();
+
+        long sequentialDuration = (long)((t2-t1)*1e-6)/*ms*/;
+        long concurrentDuration = (long)((t3-t2)*1e-6)/*ms*/;
+
+        // concurrent version should run at least twice as fast
+        Assertions.assertTrue(concurrentDuration<sequentialDuration/2);
     }
 
     private void sleep(long millis) {
