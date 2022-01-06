@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class SimpleDataRaceTest {
+public class SimpleActorVSDataRaceTest {
 
     private static final int N = 1_000;
     private static final int P =    16;
@@ -13,8 +13,12 @@ public class SimpleDataRaceTest {
     @Test
     public void simpleDataRaceTestMustFail() {
 
+        // Counter is used to demonstrate data races
+        // that occur by concurrently calling
+        // methods of the counter object
         Counter counter = Counter.newInstance();
 
+        // concurrently call 'inc' N times
         Tasks.group(P, g -> {
             for (int i = 0; i < N; i++) {
                 g.async(() -> {
@@ -37,14 +41,18 @@ public class SimpleDataRaceTest {
 
         System.out.println("starting");
 
+        // we use an actor to prevent data races
+        // that occur by concurrently calling
+        // methods of the counter object
         Counter counter = Counter.newInstance();
         GenericActor<Counter> a = GenericActor.of(
             counter, Executor.newSerialInstance()
         );
 
+        // we concurrently call the 'inc' method
         Tasks.group(P, g -> {
             for(int i = 0; i < N; i++) {
-                g.async(() -> a.callAsync("inc"));
+                g.async(() -> a.callAsync("inc")); // data race prevented by actor
             }
         }).await();
 
@@ -53,20 +61,7 @@ public class SimpleDataRaceTest {
         int value = a.call("getValue");
         System.out.println("N: %d, SUM: %d".formatted(N, value));
 
+        // no data races occurred. numbers should match.
         assertEquals(N, value);
-    }
-
-    @Test
-    public void simpleDataRaceTest() {
-
-//        Counter counter = Counter.newInstance();
-//        CounterActor a  = counter.asActor();
-//
-//        for(int i = 0; i < N; i++) {
-//            executor.execute(() -> a.inc());
-//        }
-//
-//        assertEquals(N, a.getValue());
-
     }
 }
