@@ -12,7 +12,7 @@ Consider the following code:
 // sequential
 System.out.println("starting sequential:");
 for(int i = 0; i < N; i++) {
-    slowIncrement.run();       // runs sequentially
+    doSomethingThatTakesAWhile();       // runs sequentially
 }
 ```
 
@@ -25,7 +25,7 @@ Here's how we can perform the method calls inside the loop concurrently:
 System.out.println("starting concurrent:");
 Tasks.group(g -> {
     for(int i = 0; i < N; i++) {
-       g.async(slowIncrement); // runs concurrently
+       g.async(()->doSomethingThatTakesAWhile()); // runs concurrently
     }
 }).await();
 
