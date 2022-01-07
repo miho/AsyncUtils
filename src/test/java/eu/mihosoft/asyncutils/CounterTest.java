@@ -20,34 +20,59 @@
  * Computing and Visualization in Science, 2013, 16(4),
  * 181–192. http://doi.org/10.1007/s00791-014-0230-y
  */
-package eu.mihosoft.concurrencyutils;
+package eu.mihosoft.asyncutils;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
+import org.junit.jupiter.api.Test;
 
-public final class Tasks {
+import static org.junit.jupiter.api.Assertions.*;
 
-    public static TaskGroup group(Consumer<TaskGroup> consumer) {
-        return TaskGroup.group(consumer);
+public class CounterTest {
+
+    private static final int N = 1_000;
+
+    @Test
+    public void incTest() {
+
+        Counter counter = Counter.newInstance();
+
+        for(int i = 0; i < N; i++) {
+            counter.inc();
+        }
+
+        assertEquals(N, counter.getValue());
+
     }
 
-    public static TaskGroup group(int numThreads, Consumer<TaskGroup> consumer) {
-        return TaskGroup.group(numThreads, consumer);
+    @Test
+    public void decTest() {
+
+        Counter counter = Counter.newInstance();
+
+        for(int i = 0; i < N; i++) {
+            counter.dec();
+        }
+
+        assertEquals(-N, counter.getValue());
+
     }
 
-    public static void awaitAll(TaskGroup... groups) {
-        var elements = groups;
-        CompletableFuture[] futures = new CompletableFuture[elements.length];
-        System.arraycopy(elements, 0, futures, 0, elements.length);
+    @Test
+    public void restTest() {
 
-        CompletableFuture.allOf(futures).join();
+        Counter counter = Counter.newInstance();
+
+        assertEquals(0, counter.getValue());
+
+        for(int i = 0; i < N; i++) {
+            counter.inc();
+        }
+
+        assertEquals(N, counter.getValue());
+
+        counter.reset();
+
+        assertEquals(0, counter.getValue());
+
     }
 
-    public static <T> T awaitAny(TaskGroup... groups) {
-        var elements = groups;
-        CompletableFuture[] futures = new CompletableFuture[elements.length];
-        System.arraycopy(elements, 0, futures, 0, elements.length);
-
-        return (T)CompletableFuture.anyOf(futures).join();
-    }
 }

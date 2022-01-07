@@ -64,7 +64,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes('Automatic-Module-Name': 'eu.mihosoft.concurrencyutils')
+        attributes('Automatic-Module-Name': 'eu.mihosoft.asyncutils')
     }
 }
 
