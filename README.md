@@ -32,7 +32,8 @@ Tasks.group(g -> {
 // continues after all tasks have been executed
 ```
 
-Of course, we could use Streams, Fork-Join and Futures. But either the APIs require a lot of boilerplate code
-or they lack features such as control over how exceptions are handled or how to specify how many threads should be used to process the tasks.
+Of course, we could use Streams, Fork-Join APIs and Futures. But either the APIs require a lot of boilerplate code
+or they lack features such as control over how exceptions are handled or how to specify how many threads should be 
+used to process the tasks.
 
 
