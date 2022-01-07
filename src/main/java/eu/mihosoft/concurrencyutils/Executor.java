@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Task executor. In contrast to {@link java.util.concurrent.ExecutorService} this executor can be
@@ -25,21 +25,105 @@ public final class Executor {
     private final ReentrantLock lock = new ReentrantLock();
 
     private final AtomicReference<State> state = new AtomicReference<>(State.TERMINATED);
-    private final List<BiConsumer<State,State>> stateChangedListeners = new ArrayList<>();
+    private final List<Consumer<ExecutorEvent>> stateChangedListeners = new ArrayList<>();
     private volatile ExecutorService executor;
     private volatile boolean serial;
     private volatile long terminationTimeout = Long.MAX_VALUE; // ms
 
-
+    /**
+     * Executor state. See the individual states for a detailed explanation.
+     */
     public enum State {
+        /**
+         * The executor is currently starting, i.e., it creates the required threads
+         * and initializes its execution engine.
+         */
         STARTING,
+        /**
+         * The executor has been successfully started. Tasks can now be submitted for execution.
+         */
         STARTED,
+
+        /**
+         * The executor is cancelling enqueued tasks. Tasks can't be submitted. Attempts to do so will
+         * fail with a {@link java.util.concurrent.RejectedExecutionException}.
+         */
+        CANCELLING,
+        /**
+         * The executor has cancelled all enqueued tasks. Tasks can't be submitted. Attempts to do so will
+         * fail with a {@link java.util.concurrent.RejectedExecutionException}.
+         */
+        CANCELLED,
+        /**
+         * The executor is currently shutting down. Tasks can't be submitted. Attempts to do so will
+         * fail with a {@link java.util.concurrent.RejectedExecutionException}.
+         */
         SHUTTING_DOWN,
+        /**
+         * The executor has been successfully shut down. There might still be unprocessed tasks but no
+         * tasks can be submitted to the executor. Attempts to do so will
+         * fail with a {@link java.util.concurrent.RejectedExecutionException}.
+         */
         SHUTDOWN,
+        /**
+         * The executor is terminating, i.e., it will do its best to either process or cancel unprocessed
+         * tasks within the specified time period depending on whether termination has been triggered by a
+         * cancellation request or a request to regularly stop the executor. If the executor does not
+         * terminate within the specified time period, it will throw a
+         * {@link java.util.concurrent.TimeoutException}.
+         *
+         */
         TERMINATING,
+        /**
+         * The executor has been successfully terminated. The queue is fully empty and all threads have been
+         * terminated.
+         */
         TERMINATED,
-        CANCELLING, ERROR
+
+        /**
+         * An error occurred during starting, stopping/cancelling. The caller of the corresponding
+         * {@link #start()}, {@link #stop()} or {@link #cancel()} methods will receive an exception.
+         */
+        ERROR;
+
+
     }
+
+    record ExecutorEvent(Executor executor, State oldState, State newState) {
+
+        /**
+         *
+         * @return
+         */
+        boolean isCancelledEvent() {
+            return oldState == State.CANCELLING && newState == State.CANCELLED;
+        }
+
+        /**
+         *
+         * @return
+         */
+        boolean isTerminatedEvent() {
+            return oldState == State.TERMINATING && newState == State.TERMINATED;
+        }
+
+        /**
+         *
+         * @return
+         */
+        boolean isShutdownEvent() {
+            return oldState == State.SHUTTING_DOWN && newState == State.SHUTDOWN;
+        }
+
+        /**
+         *
+         * @return
+         */
+        boolean isStartedEvent() {
+            return oldState == State.STARTING && newState == State.STARTED;
+        }
+    }
+
 
     /**
      * Constructor.
@@ -71,7 +155,7 @@ public final class Executor {
      * @param l listener to register
      * @return subscription that allows to unregister the listener from this executor
      */
-    public Subscription registerOnStateChanged(BiConsumer<State, State> l) {
+    public Subscription registerOnStateChanged(Consumer<ExecutorEvent> l) {
         stateChangedListeners.add(l);
         return ()->stateChangedListeners.remove(l);
     }
@@ -138,13 +222,26 @@ public final class Executor {
     }
 
     /**
+     * Indicates whether this executor is currently accepting tasks.
+     * @return {@code true} if this executor is currently accepting tasks; {@code false} otherwise
+     */
+    public boolean isAccepting() {
+        lock.lock();
+        try {
+            return state.get()==State.STARTED;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
      * Indicates whether this executor is currently running.
      * @return {@code true} if this executor is currently running; {@code false} otherwise
      */
     public boolean isRunning() {
         lock.lock();
         try {
-            return !isShutdown() && !isTerminated();
+            return state.get()!=State.TERMINATED;
         } finally {
             lock.unlock();
         }
@@ -221,17 +318,17 @@ public final class Executor {
             return t;
         }
 
+        if(!isRunning()) {
+            throw new RejectedExecutionException(
+                "Start this executor before submitting tasks"
+            );
+        }
+
         try {
             queue.put(t);
             t.onEnqueued();
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-        }
-
-        if(!isRunning()) {
-            throw new RejectedExecutionException(
-                "Start this executor before submitting tasks"
-            );
         }
 
         executor.execute(() -> {
@@ -257,7 +354,7 @@ public final class Executor {
      */
     public void cancel() {
         try {
-            setState(State.SHUTTING_DOWN);
+            setState(State.CANCELLING);
             lock.lock();
         } catch(Exception ex) {
             setState(State.ERROR);
@@ -269,7 +366,9 @@ public final class Executor {
                 f.cancel(true);
                 t.onDequeued();
             });
-            if(executor!=null && isRunning()) executor.shutdownNow();
+            setState(State.CANCELLED);
+            setState(State.SHUTTING_DOWN);
+            if(executor!=null && isRunning()) executor.shutdownNow(); // TOTO should we process remaining tasks?
             queue.clear();
             setState(State.SHUTDOWN);
             terminating();
@@ -352,7 +451,8 @@ public final class Executor {
     }
 
     /**
-     * Returns submitted tasks as future that is completed after all tasks have been executed.
+     * Returns submitted tasks as future that is completed after all tasks currently present in the queue
+     * have been executed.
      * @return future that is completed after all tasks have been executed
      */
     CompletableFuture<Void> asFuture() {
@@ -396,7 +496,7 @@ public final class Executor {
 
         if(s != prev) {
             CompletableFuture.runAsync(() -> stateChangedListeners.parallelStream().
-                filter(l -> l != null).forEach(l -> l.accept(prev, s))).join();
+                filter(l -> l != null).forEach(l -> l.accept(new ExecutorEvent(this, prev, s)))).join();
         }
     }
 }
