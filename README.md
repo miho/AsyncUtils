@@ -20,6 +20,7 @@ Java offers multiple APIs to execute methods concurrently. But these APIs are a 
 
 Here's how we can perform the method calls inside the loop concurrently:
 
+```java
 // concurrent
 System.out.println("starting concurrent:");
 Tasks.group(g -> {
