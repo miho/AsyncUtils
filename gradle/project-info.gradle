@@ -1,0 +1,23 @@
+// -----------------------------------------------------------------------------
+// publishing information
+// -----------------------------------------------------------------------------
+ext.publishingInfo.artifactId =  project.name.toLowerCase()
+ext.publishingInfo.groupId    =  'eu.mihosoft.concurrencyutils'
+ext.publishingInfo.versionId  =  ext.commonProps.get("publication.version")
+
+ext.publishingInfo.developerName         = 'Michael Hoffer'
+ext.publishingInfo.developerAlias        = 'miho'
+ext.publishingInfo.developerEmail        = 'info@michaelhoffer.de'
+ext.publishingInfo.inceptionYear         = '2022'
+
+ext.publishingInfo.desc                  = 'Concurrency utilities.'
+ext.publishingInfo.license               = 'Apache-2.0'
+ext.publishingInfo.licenseUrl            = 'https://github.com/miho/ConcurrencyUtils/blob/master/LICENSE'
+ext.publishingInfo.labels                = ['concurrency', 'async', 'await', 'virtual threads', 'project loom', 'actors', 'streams' , 'vmf', 'vrl', 'modeling framework']
+ext.publishingInfo.websiteUrl            = 'https://github.com/miho/ConcurrencyUtils'
+ext.publishingInfo.issueTrackerUrl       = 'https://github.com/miho/ConcurrencyUtils/issues'
+ext.publishingInfo.vcsUrl                = 'https://github.com/miho/ConcurrencyUtils.git'
+
+ext.publishingInfo.gitHubMavenRepo       = "https://maven.pkg.github.com/miho/ConcurrencyUtils"
+
+ext.publishingInfo.pomName               =  ext.publishingInfo.artifactId
