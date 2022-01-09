@@ -1,7 +1,16 @@
 # AsyncUtils
 tasks, async, await, actors and channels for java
 
-WIP
+This project tries to explore several approaches to simplify async/concurrent programming in Java.
+AsyncUtils basically consits of distilled versions of patterns that I implemented over the past years. 
+The purpose isn't best-in class performance but rather reliability. 
+
+Sharing mutable state is usually avoided in concurrent programming. We use actors to reduce the negative
+impact of shared mutable state. Currently, there's only a reflection based actor. It will serve as 
+prototype for [VMF](https://github.com/miho/VMF) actors currently in development.
+
+
+*WARNING:* WIP, eeds Project Loom to unleash its full potential. The API might change over time.
 
 ## Structured concurrency with Task Groups
 
