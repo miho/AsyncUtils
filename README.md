@@ -10,7 +10,7 @@ impact of shared mutable state. Currently, there's only a reflection based actor
 prototype for [VMF](https://github.com/miho/VMF) actors currently in development.
 
 
-*WARNING:* WIP, eeds Project Loom to unleash its full potential. The API might change over time.
+*WARNING:* WIP, needs [Project Loom](https://openjdk.java.net/projects/loom/) to unleash its full potential. The API might change over time.
 
 ## Structured concurrency with Task Groups
 
