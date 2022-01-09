@@ -16,7 +16,8 @@ for(int i = 0; i < N; i++) {
 }
 ```
 
-Java offers multiple APIs to execute methods concurrently. But these APIs are a little baroque.
+Java offers multiple APIs to execute methods concurrently. But these APIs are a little baroque. AsyncUtils 
+provides simpler APIs for that purpose.
 
 Here's how we can perform the method calls inside the loop concurrently:
 
