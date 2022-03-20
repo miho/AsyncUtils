@@ -50,40 +50,76 @@ public class Task <T> {
         this.timestampCreated = System.currentTimeMillis();
     }
 
+    /**
+     * Returns the name of this task.
+     * @return name of this task
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Creates a new task.
+     * @param callable the callable to execute
+     * @param <T> the return type of the callable
+     * @return a new task created by this method
+     */
     public static <T> Task<T> newInstance(Callable<T> callable) {
         var t = new Task<>(null,callable, new CompletableFuture<>(), new CompletableFuture<>());
         return t;
     }
 
-    public static Task<Void> newInstance(Runnable callable) {
+    /**
+     * Creates a new task.
+     * @param runnable the runnable to execute
+     * @return a new task created by this method
+     */
+    public static Task<Void> newInstance(Runnable runnable) {
         var t = new Task<Void>(null, ()-> {
-            callable.run();
+            runnable.run();
             return null;
         }, new CompletableFuture<>(), new CompletableFuture<>());
         return t;
     }
 
+    /**
+     * Creates a new task.
+     * @param name name of the task to create
+     * @param callable callable to execute
+     * @param <T> the return type of the callable
+     * @return a new task created by this method
+     */
     public static <T> Task<T> newInstance(String name, Callable<T> callable) {
         var t = new Task<>(name,callable, new CompletableFuture<>(), new CompletableFuture<>());
         return t;
     }
 
-    public static Task<Void> newInstance(String name, Runnable callable) {
+    /**
+     * Creates a new task.
+     * @param name name of the task to create
+     * @param runnable runnable to execute
+     * @return a new task created by this method
+     */
+    public static Task<Void> newInstance(String name, Runnable runnable) {
         var t = new Task<Void>(name, ()-> {
-            callable.run();
+            runnable.run();
             return null;
         }, new CompletableFuture<>(), new CompletableFuture<>());
         return t;
     }
 
+    /**
+     * Returns the result as completable future.
+     * @return the result as completable future
+     */
     public CompletableFuture<T> getResult() {
         return result;
     }
 
+    /**
+     * Telemetry information as completable future.
+     * @return telemetry information as completable future
+     */
     public CompletableFuture<Telemetry> getTelemetry() {
         return telemetry;
     }
@@ -104,7 +140,7 @@ public class Task <T> {
         boolean totalLatencyValid    = timestampDequeued > 0 && timestampEnqueued > 0;
         boolean processingTimeValid  = timestampDequeued > 0 && timestampStarted  > 0;
 
-        telemetry.complete(new Telemetry(
+        telemetry.complete(new TelemetryImpl(
             timestampCreated,
             timestampEnqueued,
             timestampStarted,
@@ -115,12 +151,53 @@ public class Task <T> {
         ));
     }
 
-    public record Telemetry(
+    /**
+     * Task telemetry information.
+     */
+    public sealed interface Telemetry permits TelemetryImpl {
+        /**
+         *
+         * @return point in time at which the task has been created (milliseconds since unix epoch)
+         */
+        long getTimestampCreated();
+        /**
+         *
+         * @return point in time at which the task has been enqueued (milliseconds since unix epoch)
+         */
+        long getTimestampEnqueued();
+        /**
+         *
+         * @return point in time at which the task has been started (milliseconds since unix epoch)
+         */
+        long getTimestampStarted();
+        /**
+         *
+         * @return point in time at which the task has been dequeued (milliseconds since unix epoch)
+         */
+        long getTimestampDequeued();
+        /**
+         *
+         * @return executor latency (duration between enqueuing and starting the task, milliseconds)
+         */
+        long getExecutorLatency();
+        /**
+         *
+         * @return total latency (duration between enqueuing and dequeuing the task, milliseconds)
+         */
+        long getTotalLatency();
+        /**
+         *
+         * @return processing time (duration between starting and dequeuing the task, milliseconds)
+         */
+        long getProcessingTime();
+    }
+
+    private record TelemetryImpl (
         long timestampCreated,
         long timestampEnqueued,
         long timestampStarted,
         long timestampDequeued,
-        long executorLatency, long totalLatency,long processingTime) {
+        long executorLatency, long totalLatency,long processingTime) implements Telemetry {
 
         @Override
         public String toString() {
@@ -137,6 +214,41 @@ public class Task <T> {
                     timestampCreated, timestampEnqueued, timestampStarted, timestampDequeued,
                     executorLatency, totalLatency, processingTime
                 );
+        }
+
+        @Override
+        public long getExecutorLatency() {
+            return executorLatency;
+        }
+
+        @Override
+        public long getProcessingTime() {
+            return processingTime;
+        }
+
+        @Override
+        public long getTimestampCreated() {
+            return timestampCreated;
+        }
+
+        @Override
+        public long getTimestampDequeued() {
+            return timestampDequeued;
+        }
+
+        @Override
+        public long getTimestampEnqueued() {
+            return timestampEnqueued;
+        }
+
+        @Override
+        public long getTimestampStarted() {
+            return timestampStarted;
+        }
+
+        @Override
+        public long getTotalLatency() {
+            return totalLatency;
         }
     }
 }

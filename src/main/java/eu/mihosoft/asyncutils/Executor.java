@@ -111,11 +111,17 @@ public final class Executor {
 
     }
 
-    record ExecutorEvent(Executor executor, State oldState, State newState) {
+    /**
+     * Executor event that indicates whether the executor isstarted, cancelled, shotdown or terminated.
+     * @param executor the executor
+     * @param oldState the old state
+     * @param newState the new state
+     */
+    public record ExecutorEvent(Executor executor, State oldState, State newState) {
 
         /**
          *
-         * @return
+         * @return {@code true} if this event indicates cancellation of the executor; {@code false} otherwise
          */
         boolean isCancelledEvent() {
             return oldState == State.CANCELLING && newState == State.CANCELLED;
@@ -123,7 +129,7 @@ public final class Executor {
 
         /**
          *
-         * @return
+         * @return {@code true} if this event indicates termination of the executor; {@code false} otherwise
          */
         boolean isTerminatedEvent() {
             return oldState == State.TERMINATING && newState == State.TERMINATED;
@@ -131,7 +137,7 @@ public final class Executor {
 
         /**
          *
-         * @return
+         * @return {@code true} if this event indicates shutdown of the executor; {@code false} otherwise
          */
         boolean isShutdownEvent() {
             return oldState == State.SHUTTING_DOWN && newState == State.SHUTDOWN;
@@ -139,7 +145,7 @@ public final class Executor {
 
         /**
          *
-         * @return
+         * @return {@code true} if this event indicates that the executor has been started; {@code false} otherwise
          */
         boolean isStartedEvent() {
             return oldState == State.STARTING && newState == State.STARTED;
@@ -178,19 +184,32 @@ public final class Executor {
      * @return subscription that allows to unregister the listener from this executor
      */
     public Subscription registerOnStateChanged(Consumer<ExecutorEvent> l) {
-        stateChangedListeners.add(l);
-        return ()->stateChangedListeners.remove(l);
+        lock.lock();
+        try {
+            stateChangedListeners.add(l);
+        } finally {
+            lock.unlock();
+        }
+        return ()->{
+            lock.lock();
+            try {
+                stateChangedListeners.remove(l);
+            } finally {
+                lock.unlock();
+            }
+        };
     }
 
     /**
      * Starts this executor.
      */
     public void start() {
+        lock.lock();
         try {
             setState(State.STARTING);
-            lock.lock();
         } catch(Exception ex) {
             setState(State.ERROR);
+            lock.unlock();
             throw ex;
         }
         try {
@@ -416,7 +435,8 @@ public final class Executor {
     };
 
     /**
-     * Stops this executor (waits until previously submitted tasks are executed and the executor has been fully shut down and terminated).
+     * Stops this executor (waits until previously submitted tasks are executed and the executor has
+     * been fully shut down and terminated).
      */
     public void stop() {
         try {
@@ -440,7 +460,8 @@ public final class Executor {
 
 
     /**
-     * Stops this executor (waits until previously submitted tasks are executed and the executor has been fully shut down and terminated).
+     * Stops this executor (waits until previously submitted tasks are executed and the executor has
+     * been fully shut down and terminated).
      *
      * @return future that is completed when the executor has been shut down and terminated
      */
@@ -461,6 +482,10 @@ public final class Executor {
         return this;
     }
 
+    /**
+     * Returns the termination timeout in milliseconds.
+     * @return termination timeout in milliseconds
+     */
     public long getTerminationTimeout() {
         return terminationTimeout;
     }

@@ -25,16 +25,38 @@ package eu.mihosoft.asyncutils;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+/**
+ * Task utilities.
+ */
 public final class Tasks {
 
+    private Tasks() {
+        throw new AssertionError("Don't instantiate me!");
+    }
+
+    /**
+     * Creates a new task group.
+     * @param consumer consumer for creating tasks in this group
+     * @return task group created by this method
+     */
     public static TaskGroup group(Consumer<TaskGroup> consumer) {
         return TaskGroup.group(consumer);
     }
 
+    /**
+     * Creates a new task group.
+     * @param numThreads number of threads to use
+     * @param consumer consumer for creating tasks in this group
+     * @return task group created by this method
+     */
     public static TaskGroup group(int numThreads, Consumer<TaskGroup> consumer) {
         return TaskGroup.group(numThreads, consumer);
     }
 
+    /**
+     * Awaits all specified task groups.
+     * @param groups groups to wait for
+     */
     public static void awaitAll(TaskGroup... groups) {
         var elements = groups;
         CompletableFuture[] futures = new CompletableFuture[elements.length];
@@ -43,6 +65,12 @@ public final class Tasks {
         CompletableFuture.allOf(futures).join();
     }
 
+    /**
+     * Waits for any of the specified task groups (just a single one is enough).
+     * @param groups groups to wait for
+     * @param <T> return type of the first task that completes
+     * @return return value (of the first task that completes)
+     */
     public static <T> T awaitAny(TaskGroup... groups) {
         var elements = groups;
         CompletableFuture[] futures = new CompletableFuture[elements.length];
