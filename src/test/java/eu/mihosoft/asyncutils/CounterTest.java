@@ -57,7 +57,7 @@ public class CounterTest {
     }
 
     @Test
-    public void restTest() {
+    public void resetTest() {
 
         Counter counter = Counter.newInstance();
 

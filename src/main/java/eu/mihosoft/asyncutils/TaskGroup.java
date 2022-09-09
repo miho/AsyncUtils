@@ -37,7 +37,7 @@ public final class TaskGroup {
 
     private TaskGroup(String name, int numThreads) {
         this.name = name==null?"unnamed-group<"+System.identityHashCode(this)+">":name;
-        if(numThreads<1) {
+        if(numThreads<0) {
             throw new IllegalArgumentException("Number of threads must be positive");
         }
         executor = Executor.newInstance(numThreads);
@@ -135,7 +135,7 @@ public final class TaskGroup {
      * @return task group created by this method
      */
     public static TaskGroup group(Consumer<TaskGroup> consumer) {
-        return group(null, Runtime.getRuntime().availableProcessors()-1, consumer);
+        return group(null, 0 /*cached executor*/, consumer);
     }
 
     /**
@@ -155,7 +155,7 @@ public final class TaskGroup {
      * @return task group created by this method
      */
     public static TaskGroup group(String name, Consumer<TaskGroup> consumer) {
-        return group(name, Runtime.getRuntime().availableProcessors()-1, consumer);
+        return group(name, 0/*cached executor*/, consumer);
     }
 
     /**

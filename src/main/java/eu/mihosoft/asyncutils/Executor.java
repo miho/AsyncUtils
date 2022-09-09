@@ -49,6 +49,11 @@ public final class Executor {
     private final AtomicReference<State> state = new AtomicReference<>(State.TERMINATED);
     private final List<Consumer<ExecutorEvent>> stateChangedListeners = new ArrayList<>();
     private volatile ExecutorService executor;
+
+    private final ExecutorService eventExecutor = Executors.newCachedThreadPool(
+        VirtualThreadUtils.newThreadFactory(true)
+    );
+
     private volatile boolean serial;
     private volatile long terminationTimeout = Long.MAX_VALUE; // ms
 
@@ -160,7 +165,7 @@ public final class Executor {
      * @param bufferSize buffer size (bounded blocking queue, blocks if limit exceeded)
      */
     private Executor(int numThreads, int bufferSize) {
-        if(numThreads < 1) {
+        if(numThreads < 0) {
             throw new IllegalArgumentException("Number of threads must be positive");
         }
         this.numThreads = numThreads;
@@ -216,7 +221,12 @@ public final class Executor {
             if (executor != null && !isTerminated() && !isShutdown()) {
                 throw new RuntimeException("Stop this executor before starting it.");
             }
-            executor = Executors.newFixedThreadPool(numThreads);
+            if(numThreads == 0) {
+                executor = Executors.newCachedThreadPool(VirtualThreadUtils.newThreadFactory(true));
+            } else {
+                executor = Executors.newFixedThreadPool(numThreads, VirtualThreadUtils.newThreadFactory(true));
+            }
+
             setState(State.STARTED);
         } catch (Exception ex) {
             setState(State.ERROR);
@@ -542,8 +552,12 @@ public final class Executor {
         var prev = state.getAndSet(s);
 
         if(s != prev) {
-            CompletableFuture.runAsync(() -> stateChangedListeners.parallelStream().
-                filter(l -> l != null).forEach(l -> l.accept(new ExecutorEvent(this, prev, s)))).join();
+            // concurrently notify all stateChangedListeners using the eventExecutor
+            // wait for all stateChangedListeners to be notified
+            var futures = stateChangedListeners.stream()
+                .map(l -> CompletableFuture.runAsync(() -> l.accept(new ExecutorEvent(this, prev, s)), eventExecutor))
+                .toArray(CompletableFuture[]::new);
+            CompletableFuture.allOf(futures).join();
         }
     }
 }
