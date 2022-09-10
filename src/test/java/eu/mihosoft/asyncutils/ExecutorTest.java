@@ -60,7 +60,7 @@ public class ExecutorTest {
         var f = new CompletableFuture<Boolean>();
 
         executor.registerOnStateChanged(evt -> {
-//            log(evt.oldState().name()+"->"+evt.newState().name());
+            log(evt.oldState().name()+"->"+evt.newState().name());
 
             if(evt.isTerminatedEvent()) {
                 f.complete(true);
@@ -69,6 +69,8 @@ public class ExecutorTest {
 
         executor.start();
 
+        // in this case, we use a completable future to be fully independent of our executor implementation
+        // currently under test
         CompletableFuture.runAsync(()-> {
             for(int i = 0; i < N; i++) {
                 final int finalI = i;
@@ -76,10 +78,10 @@ public class ExecutorTest {
                 t.getResult().handleAsync((unused, throwable) -> {
                     if(throwable!=null) {
                         cancellationCounter.incrementAndGet();
-//                        log("cancelled: " + finalI);
+                        log("cancelled: " + finalI);
                     } else {
                         completionCounter.incrementAndGet();
-//                        log("done:      " + finalI);
+                        log("done:      " + finalI);
                     }
                     return null;
                 });
