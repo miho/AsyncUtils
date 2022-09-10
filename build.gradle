@@ -28,6 +28,7 @@ plugins {
 
 // load plugins
 apply plugin: 'eu.mihosoft.vmf'
+apply from: 'gradle/publishing.gradle'
 
 // set dependencies for intellij editor (otherwise vmf dir would be ignored)
 idea {

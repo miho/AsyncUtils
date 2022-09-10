@@ -1,5 +1,7 @@
 # AsyncUtils
-tasks, async, await, actors and channels for java
+[![Javadocs](https://www.javadoc.io/badge/eu.mihosoft.asyncutils/vmf.svg?color=blue&label=AsyncUtils)](https://www.javadoc.io/doc/eu.mihosoft.asyncutils/asyncutils) [![Javadocs]
+
+tasks, async, await, actors and more for java
 
 This project tries to explore several approaches to simplify async/concurrent programming in Java.
 AsyncUtils basically consits of distilled versions of patterns that I implemented over the past years. 
