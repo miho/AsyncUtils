@@ -36,11 +36,12 @@ public final class TaskGroup {
     private volatile boolean accepting;
 
     private TaskGroup(String name, int numThreads) {
+        this(name, Executor.newInstance(numThreads));
+    }
+
+    private TaskGroup(String name, Executor executor) {
         this.name = name==null?"unnamed-group<"+System.identityHashCode(this)+">":name;
-        if(numThreads<0) {
-            throw new IllegalArgumentException("Number of threads must be positive");
-        }
-        executor = Executor.newInstance(numThreads);
+        this.executor = executor;
         queue = new LinkedBlockingQueue<>();
         accepting = true;
     }
@@ -156,6 +157,26 @@ public final class TaskGroup {
      */
     public static TaskGroup group(String name, Consumer<TaskGroup> consumer) {
         return group(name, 0/*cached executor*/, consumer);
+    }
+
+    /**
+     * Creates a new task group.
+     * @param name name of the group to create
+     * @param consumer consumer for creating tasks in this group
+     * @param executor executor for running tasks in this group
+     * @return task group created by this method
+     */
+    public static TaskGroup group(String name, Consumer<TaskGroup> consumer, Executor executor) {
+        var fg = new TaskGroup(name, executor);
+        fg.executor.start();
+        try {
+            consumer.accept(fg);
+        } finally {
+            fg.accepting = false;
+            fg.executor.stopAsync();
+        }
+
+        return fg;
     }
 
     /**

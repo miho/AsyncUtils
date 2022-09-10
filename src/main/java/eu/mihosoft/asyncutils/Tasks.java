@@ -22,6 +22,8 @@
  */
 package eu.mihosoft.asyncutils;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -57,12 +59,11 @@ public final class Tasks {
      * Awaits all specified task groups.
      * @param groups groups to wait for
      */
-    public static void awaitAll(TaskGroup... groups) {
-        var elements = groups;
-        CompletableFuture[] futures = new CompletableFuture[elements.length];
-        System.arraycopy(elements, 0, futures, 0, elements.length);
-
-        CompletableFuture.allOf(futures).join();
+    @SuppressWarnings("unchecked")
+    public static <T> List<T> awaitAll(TaskGroup... groups) {
+        var elements = Arrays.stream(groups).map(g -> g.asFuture()).toArray(CompletableFuture[]::new);
+        return CompletableFuture.allOf(elements)
+            .thenApply(v -> Arrays.stream(elements).map(e -> (T) e.join()).toList()).join();
     }
 
     /**
@@ -71,11 +72,9 @@ public final class Tasks {
      * @param <T> return type of the first task that completes
      * @return return value (of the first task that completes)
      */
+    @SuppressWarnings("unchecked")
     public static <T> T awaitAny(TaskGroup... groups) {
-        var elements = groups;
-        CompletableFuture[] futures = new CompletableFuture[elements.length];
-        System.arraycopy(elements, 0, futures, 0, elements.length);
-
-        return (T)CompletableFuture.anyOf(futures).join();
+        var elements = Arrays.stream(groups).map(g -> g.asFuture()).toArray(CompletableFuture[]::new);
+        return (T) CompletableFuture.anyOf(elements).join();
     }
 }
