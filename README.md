@@ -77,7 +77,8 @@ class Counter {
   public void inc() {v++;}
   public void dec() {v--;}
   public int getValue() {return v;}
-  }
+}
+```
 
 Calling the methods of this class concurrently will result in data races. the code snippet below demonstrates this:
 
