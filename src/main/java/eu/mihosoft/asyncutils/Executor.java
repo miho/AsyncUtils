@@ -443,7 +443,7 @@ public final class Executor {
             setState(State.CANCELLED);
             setState(State.SHUTTING_DOWN);
             if(executor!=null && isRunning()) executor.shutdownNow(); // TOTO should we process remaining tasks?
-            var f = asFuture();
+            var f = asFuture(); // get future prior to clearing the queue
             queue.clear();
             setState(State.SHUTDOWN);
             terminating(f);
