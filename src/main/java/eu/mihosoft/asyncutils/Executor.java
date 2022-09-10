@@ -427,8 +427,8 @@ public final class Executor {
      */
     public void cancel() {
         try {
-            setState(State.CANCELLING);
             lock.lock();
+            setState(State.CANCELLING);
         } catch(Exception ex) {
             setState(State.ERROR);
             throw ex;
@@ -439,12 +439,14 @@ public final class Executor {
                 f.cancel(true);
                 t.onDequeued();
             });
+
             setState(State.CANCELLED);
             setState(State.SHUTTING_DOWN);
             if(executor!=null && isRunning()) executor.shutdownNow(); // TOTO should we process remaining tasks?
+            var f = asFuture();
             queue.clear();
             setState(State.SHUTDOWN);
-            terminating();
+            terminating(f);
             executor = null;
         } catch(Exception ex) {
             setState(State.ERROR);
@@ -480,9 +482,9 @@ public final class Executor {
         }
         try {
             if (executor != null && isRunning()) executor.shutdown();
-            asFuture().orTimeout(terminationTimeout, TimeUnit.MILLISECONDS).join();
+            var f = asFuture();
             setState(State.SHUTDOWN);
-            terminating(); // should already be shut down
+            terminating(f); // should already be shut down
         } catch(Exception ex) {
             setState(State.ERROR);
         } finally {
@@ -547,13 +549,17 @@ public final class Executor {
         return CompletableFuture.allOf(futures);
     }
 
-    private void terminating() {
+    private void terminating(CompletableFuture<?> taskFuture) {
         lock.lock();
         try {
             setState(State.TERMINATING);
             boolean success = executor.awaitTermination(terminationTimeout, TimeUnit.MILLISECONDS);
 
-            asFuture().join();
+            try {
+                taskFuture.orTimeout(terminationTimeout, TimeUnit.MILLISECONDS).join();
+            } catch (CancellationException | CompletionException exception) {
+                // ignore
+            }
 
             if (success) {
                 setState(State.TERMINATED);
