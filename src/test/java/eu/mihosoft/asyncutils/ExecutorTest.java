@@ -25,7 +25,12 @@ package eu.mihosoft.asyncutils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ThreadLocalRandom;
@@ -34,7 +39,7 @@ import static eu.mihosoft.asyncutils.TaskScopeTest.log;
 
 public class ExecutorTest {
 
-    @RepeatedTest(15)
+    @RepeatedTest(100)
     public void executorStartAndStopTest() {
 
         // number of tasks
@@ -55,7 +60,7 @@ public class ExecutorTest {
         var f = new CompletableFuture<Boolean>();
 
         executor.registerOnStateChanged(evt -> {
-            //log(evt.oldState().name()+"->"+evt.newState().name());
+//            log(evt.oldState().name()+"->"+evt.newState().name());
 
             if(evt.isTerminatedEvent()) {
                 f.complete(true);
@@ -64,27 +69,22 @@ public class ExecutorTest {
 
         executor.start();
 
-        var submittedF = new CompletableFuture<>();
-        executor.submit(()-> {
-
+        CompletableFuture.delayedExecutor(100, TimeUnit.MILLISECONDS).execute(()-> {
             for(int i = 0; i < N; i++) {
                 final int finalI = i;
-                executor.submit(() -> sleep(100)).getResult().handleAsync((unused, throwable) -> {
+                var t = executor.submit(() -> sleep(100));
+                t.getResult().handleAsync((unused, throwable) -> {
                     if(throwable!=null) {
                         cancellationCounter.incrementAndGet();
-                        //log("cancelled: " + finalI);
+//                        log("cancelled: " + finalI);
                     } else {
                         completionCounter.incrementAndGet();
-                        //log("done:      " + finalI);
+//                        log("done:      " + finalI);
                     }
                     return null;
                 });
             }
-
-            submittedF.complete(null);
         });
-
-        submittedF.join();
 
         CompletableFuture.delayedExecutor(300, TimeUnit.MILLISECONDS).execute(()-> {
             log("cancelling executor");
@@ -92,7 +92,6 @@ public class ExecutorTest {
         });
 
         f.join(); // wait until finished
-
         int C = cancellationCounter.get();
         int D = completionCounter.get();
         int T = C+D;
@@ -100,7 +99,6 @@ public class ExecutorTest {
         System.out.println("N: %d, CANCELLED: %d, DONE: %d, TOTAL: %d".formatted(N, C, D, T));
 
         Assertions.assertEquals(N, T);
-
     }
 
     private void sleep(long millis) {

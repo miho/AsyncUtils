@@ -385,33 +385,39 @@ public final class Executor {
             return t;
         }
 
-        if(!isRunning()) {
-            throw new RejectedExecutionException(
-                "Start this executor before submitting tasks"
-            );
-        }
-
+        lock.lock();
         try {
-            queue.put(t);
-            t.onEnqueued();
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
 
-        executor.execute(() -> {
-            try {
-                if(!f.isDone()) {
-                    try {
-                        f.complete(t.call());
-                    } catch (Throwable throwable) {
-                        f.completeExceptionally(throwable);
-                    }
-                }
-            } finally {
-                queue.remove(t);
-                t.onDequeued();
+            if (!isRunning()) {
+                throw new RejectedExecutionException(
+                    "Start this executor before submitting tasks"
+                );
             }
-        });
+
+            try {
+                queue.put(t);
+                t.onEnqueued();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+
+            executor.execute(() -> {
+                try {
+                    if (!f.isDone()) {
+                        try {
+                            f.complete(t.call());
+                        } catch (Throwable throwable) {
+                            f.completeExceptionally(throwable);
+                        }
+                    }
+                } finally {
+                    queue.remove(t);
+                    t.onDequeued();
+                }
+            });
+        } finally {
+            lock.unlock();
+        }
 
         return t;
     }
