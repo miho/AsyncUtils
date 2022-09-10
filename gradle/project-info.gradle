@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
 // publishing information
 // -----------------------------------------------------------------------------
-ext.publishingInfo.artifactId =  project.name.toLowerCase()
+ext.publishingInfo.artifactId =  'asyncutils'
 ext.publishingInfo.groupId    =  'eu.mihosoft.asyncutils'
 ext.publishingInfo.versionId  =  ext.commonProps.get("publication.version")
 

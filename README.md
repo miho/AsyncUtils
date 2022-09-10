@@ -1,5 +1,6 @@
 # AsyncUtils
-[![Javadocs](https://www.javadoc.io/badge/eu.mihosoft.asyncutils/vmf.svg?color=blue&label=AsyncUtils)](https://www.javadoc.io/doc/eu.mihosoft.asyncutils/asyncutils) [![Javadocs]
+[![Javadocs](https://www.javadoc.io/badge/eu.mihosoft.asyncutils/vmf.svg?color=blue&label=AsyncUtils)](https://www.javadoc.io/doc/eu.mihosoft.asyncutils/asyncutils)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/eu.mihosoft.asyncutils/asyncutils/badge.svg)](https://maven-badges.herokuapp.com/maven-central/eu.mihosoft.asyncutils/asyncutils)
 
 tasks, async, await, actors and more for java
 
