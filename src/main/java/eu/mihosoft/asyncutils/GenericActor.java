@@ -26,6 +26,68 @@ import java.beans.Expression;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * A generic actor class that uses a serial execution model to process the method calls (i.e., the
+ * method calls are executed in the order they are received).
+ * <p>
+ * The following example shows how to use this class to prevent data races for a simple counter class.
+ *
+ * First, consider the following counter class:
+ *
+ * {@snippet :
+ * class Counter {
+ *     private int v;
+ *
+ *     public void inc() {v++;}
+ *     public void dec() {v--;}
+ *     public int getValue() {return v;}
+ * }
+ * }
+ * </p>
+ *
+ *
+ * <p>
+ * Calling the methods of this class concurrently will result in data races. the code snippet below demonstrates this:
+ *
+ * {@snippet :
+ * int N = 1000;
+ * var counter = new Counter();
+ * Tasks.scope(P, g -> {
+ *   for (int i = 0; i < N; i++) {
+ *     g.async(() -> {
+ *        counter.inc(); // data race
+ *     });
+ *   }
+ * }).awaitAll();
+ *
+ * // since we produce data races, the values shouldn't match
+ * assertNotEquals(N, counter.getValue());
+ * }
+ * </p>
+ *
+ * <p>
+ * This can simply be prevented by using an actor instead:
+ *
+ * {@snippet :
+ * int N = 1000;
+ * var counter = GenericActor.newInstance(new Counter());
+ * Tasks.scope(P, g -> {
+ *   for (int i = 0; i < N; i++) {
+ *     g.async(() -> {
+ *        counter.callAsync("inc");
+ *     });
+ *   }
+ * }).awaitAll();
+ *
+ * // since we produce no data races, the values should match
+ * assertEquals(N, counter.getValue());
+ * }
+ * </p>
+ *
+ *
+ * @param <T> type of the actor object
+ * @author Michael Hoffer (info@michaelhoffer.de)
+ */
 public class GenericActor<T> {
 
     private final Object object;
@@ -43,17 +105,38 @@ public class GenericActor<T> {
         this.executor = executor;
     }
 
+    /**
+     * Creates a new actor for the specified object.
+     * @param object object to be wrapped by this actor
+     * @return new actor for the specified object
+     *
+     * @param <T> type of the actor object
+     */
     public static <T> GenericActor<T> of(T object) {
         var executor = Executor.newSerialInstance();
         executor.start();
         return new GenericActor<>(null, object, executor);
     }
 
+    /**
+     * Creates a new actor for the specified object.
+     * @param object object to be wrapped by this actor
+     * @param executor serial executor to be used by this actor
+     * @return new actor for the specified object
+     *
+     * @param <T> type of the actor object
+     */
     public static <T> GenericActor<T> of(T object, Executor executor) {
         if(!executor.isRunning()) executor.start();
         return new GenericActor<>(null, object, executor);
     }
-
+    @SuppressWarnings("unchecked")
+    /**
+     * Calls the specified method on the wrapped object.
+     * @param method method to be called
+     * @param args arguments
+     * @return task that will be completed when the method call has been processed
+     */
     public <V> Task<V> callAsync(String method, List<Object> args) {
 
         Expression methodCallExpression = new Expression(object, method, args.toArray(new Object[args.size()]));
@@ -67,14 +150,35 @@ public class GenericActor<T> {
         ));
     }
 
+    /**
+     * Calls the specified method on the wrapped object.
+     * @param method method to be called
+     * @param args arguments
+     * @return task that will be completed when the method call has been processed
+     */
+    @SuppressWarnings("unchecked")
     public <V> Task<V> callAsync(String method, Object... args) {
         return callAsync(method, Arrays.asList(args));
     }
 
+    /**
+     * Calls the specified method on the wrapped object.
+     * @param method method to be called
+     * @param args arguments
+     * @return task that will be completed when the method call has been processed
+     */
+    @SuppressWarnings("unchecked")
     public <V> V call(String method, List<Object> args) {
         return (V)callAsync(method, args).getResult().join();
     }
 
+    /**
+     * Calls the specified method on the wrapped object.
+     * @param method method to be called
+     * @param args arguments
+     * @return task that will be completed when the method call has been processed
+     */
+    @SuppressWarnings("unchecked")
     public <V> V call(String method, Object... args) {
         return (V)callAsync(method, Arrays.asList(args)).getResult().join();
     }

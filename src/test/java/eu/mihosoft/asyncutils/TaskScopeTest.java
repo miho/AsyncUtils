@@ -65,7 +65,7 @@ public class TaskScopeTest {
         // concurrent
         System.out.println("starting concurrent:");
         var tasks = new ArrayList<Task<Void>>();
-        Tasks.group(g -> {
+        Tasks.scope(g -> {
             for(int i = 0; i < N; i++) {
                var t = g.async(slowIncrement); // runs concurrently
                 tasks.add(t);

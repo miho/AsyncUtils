@@ -41,11 +41,10 @@ public class SimpleActorVSDataRaceTest {
         Counter counter = Counter.newInstance();
 
         // concurrently call 'inc' N times
-        Tasks.group(P, g -> {
+        Tasks.scope(P, g -> {
             for (int i = 0; i < N; i++) {
                 g.async(() -> {
                     counter.inc(); // data race
-                    return 0;
                 });
             }
         }).awaitAll();
@@ -67,12 +66,12 @@ public class SimpleActorVSDataRaceTest {
         // that occur by concurrently calling
         // methods of the counter object
         Counter counter = Counter.newInstance();
-        GenericActor<Counter> a = GenericActor.of(
+        var a = GenericActor.of(
             counter, Executor.newSerialInstance()
         );
 
         // we concurrently call the 'inc' method
-        Tasks.group(P, g -> {
+        Tasks.scope(P, g -> {
             for(int i = 0; i < N; i++) {
                 g.async(() -> a.callAsync("inc")); // data race prevented by actor
             }

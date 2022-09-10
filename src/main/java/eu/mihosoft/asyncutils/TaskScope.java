@@ -28,7 +28,34 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 /**
- * Task scope that scopes tasks.
+ * Task scope that enables structured concurrency for tasks.
+ * A simple usage example (wait for <b>all</b> tasks to finish):
+ *
+ * <p>
+ * {@snippet :
+ * var results = Tasks.scope(g->{
+ *   for(int i=0;i<N; i++){
+ *     g.async(()->doSomethingThatTakesAWhile()); // runs concurrently
+ *   }
+ * }).awaitAll();
+ *
+ * // continues after all tasks have been executed
+ * }
+ * </p>
+ * <p>
+ * Another usage example (wait for <b>any</b> task to finish):
+ *
+ * {@snippet :
+ * var results = Tasks.scope(g->{
+ *   for(int i=0;i<N; i++){
+ *     g.async(()->doSomethingThatTakesAWhile()); // runs concurrently
+ *   }
+ * }).awaitAny();
+ *
+ * // continues after one task has been executed
+ * }
+ * </p>
+ * @author Michael Hoffer (info@michaelhoffer.de)
  */
 public final class TaskScope {
     private final Executor executor;
@@ -99,11 +126,28 @@ public final class TaskScope {
     }
 
     /**
-     * stops this task scope (the internal executor).
+     * Stops this task scope (the internal executor).
      * @see Executor#stop()
      */
     public void stop() {
         executor.stop();
+    }
+
+    /**
+     * Stops this task scope (the internal executor).
+     * @return future that can be used to wait for the termination
+     */
+    public CompletableFuture<?> stopAsync() {
+        return executor.stopAsync();
+    }
+
+    /**
+     * Cancels this task scope (the internal executor).
+     * @return future that can be used to wait for the cancellation
+     * @see Executor#cancelAsync()
+     */
+    public CompletableFuture<?> cancelAsync() {
+        return executor.cancelAsync();
     }
 
     /**
@@ -206,7 +250,7 @@ public final class TaskScope {
     public static TaskScope scope(String name, int numThreads, Consumer<TaskScope> consumer) {
 
         var fg = new TaskScope(name, numThreads);
-        fg.executor.start();
+        fg.executor.startIfNotRunning();
         try {
             consumer.accept(fg);
         } finally {

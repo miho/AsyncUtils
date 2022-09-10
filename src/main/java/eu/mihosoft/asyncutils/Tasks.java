@@ -41,7 +41,7 @@ public final class Tasks {
      * @param consumer consumer for creating tasks in this group
      * @return task group created by this method
      */
-    public static TaskScope group(Consumer<TaskScope> consumer) {
+    public static TaskScope scope(Consumer<TaskScope> consumer) {
         return TaskScope.scope(consumer);
     }
 
@@ -51,7 +51,7 @@ public final class Tasks {
      * @param consumer consumer for creating tasks in this group
      * @return task group created by this method
      */
-    public static TaskScope group(int numThreads, Consumer<TaskScope> consumer) {
+    public static TaskScope scope(int numThreads, Consumer<TaskScope> consumer) {
         return TaskScope.scope(numThreads, consumer);
     }
 

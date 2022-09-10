@@ -206,6 +206,20 @@ public final class Executor {
     }
 
     /**
+     * Starts the executor if it has not been started yet.
+     */
+    public void startIfNotRunning() {
+        lock.lock();
+        try {
+            if(state.get() == State.TERMINATED) {
+                start();
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
      * Starts this executor.
      */
     public void start() {
