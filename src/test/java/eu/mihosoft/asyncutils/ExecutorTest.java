@@ -34,16 +34,20 @@ import static eu.mihosoft.asyncutils.TaskGroupTest.log;
 
 public class ExecutorTest {
 
-    @RepeatedTest(100)
+    @RepeatedTest(15)
     public void executorStartAndStopTest() {
 
+        // number of tasks
         final int N = ThreadLocalRandom.current().nextInt(1,  250 + 1 /*+1 since its exclusive*/);
+        // number of threads
         final int P = ThreadLocalRandom.current().nextInt(1,   32 + 1 /*+1 since its exclusive*/);
 
         System.out.println("Starting test");
         System.out.println("N: %d, P: %d".formatted(N, P));
 
+        // counts completed tasks
         var completionCounter = new AtomicInteger();
+        // counts cancelled tasks
         var cancellationCounter = new AtomicInteger();
 
         Executor executor = Executor.newInstance(P);
@@ -81,6 +85,7 @@ public class ExecutorTest {
         });
 
         submittedF.join();
+
         CompletableFuture.delayedExecutor(300, TimeUnit.MILLISECONDS).execute(()-> {
             log("cancelling executor");
             executor.cancel();
