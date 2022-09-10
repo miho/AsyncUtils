@@ -25,16 +25,16 @@ package eu.mihosoft.asyncutils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static eu.mihosoft.asyncutils.TaskGroupTest.log;
+
 public class ExecutorTest {
 
-    @RepeatedTest(10)
+    @RepeatedTest(100)
     public void executorStartAndStopTest() {
 
         final int N = ThreadLocalRandom.current().nextInt(1,  250 + 1 /*+1 since its exclusive*/);
@@ -60,7 +60,9 @@ public class ExecutorTest {
 
         executor.start();
 
+        var submittedF = new CompletableFuture<>();
         CompletableFuture.delayedExecutor(100, TimeUnit.MILLISECONDS).execute(()-> {
+
             for(int i = 0; i < N; i++) {
                 final int finalI = i;
                 executor.submit(() -> sleep(100)).getResult().handleAsync((unused, throwable) -> {
@@ -74,8 +76,11 @@ public class ExecutorTest {
                     return null;
                 });
             }
+
+            submittedF.complete(null);
         });
 
+        submittedF.join();
         CompletableFuture.delayedExecutor(300, TimeUnit.MILLISECONDS).execute(()-> {
             log("cancelling executor");
             executor.cancel();
@@ -91,13 +96,6 @@ public class ExecutorTest {
 
         Assertions.assertEquals(N, T);
 
-    }
-
-    public void log(String value) {
-        // output
-        System.out.println("["
-            + new SimpleDateFormat("yyyy-MM-dd, HH:mm:ss.SSS")
-            .format(new Date()) + "]: " + value);
     }
 
     private void sleep(long millis) {

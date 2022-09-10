@@ -28,6 +28,8 @@ import org.junit.jupiter.api.Test;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Thread.sleep;
@@ -69,7 +71,7 @@ public class TaskGroupTest {
                var t = g.async(slowIncrement); // runs concurrently
                 tasks.add(t);
             }
-        }).await();
+        }).awaitAll();
 
         // show telemetry
         for(int i = 0; i < N; i++) {
@@ -85,11 +87,67 @@ public class TaskGroupTest {
         Assertions.assertTrue(concurrentDuration<sequentialDuration/2);
     }
 
-    private void sleep(long millis) {
+    @Test
+    public void taskAwaitAnyTest() {
+
+        var taskIdx = 3;
+
+        var completedIdx = (Integer)TaskGroup.group(g->{
+            for(int i = 0; i < N; i++) {
+                System.out.println("submitting task " + i);
+                final int finalI = i;
+                // runs asynchronously
+                g.async(()->{
+                    sleep(finalI==taskIdx?0:10_000); // we should receive the result of task 'taskIdx' first
+                    return finalI;
+                });
+            }
+        }).awaitAny().getResult().join();
+
+        Assertions.assertEquals(taskIdx, completedIdx);
+    }
+
+    @Test
+    public void awaitAllTest() {
+
+        List<Integer> expected = new ArrayList<>();
+
+        System.out.println("> submitting tasks & awaiting all");
+        List<Task<?>> tasks = TaskGroup.group(g->{
+        for(int i = 0; i < N; i++) {
+            System.out.println("  -> submitting task " + i);
+            expected.add(i);
+            final int finalI = i;
+            // runs asynchronously
+            g.async(()->{
+                sleep(10_000);
+                return finalI;
+            });
+        }}).awaitAll();
+
+        List<Integer> result = tasks.stream().map(t->(Integer)t.getResult().join()).toList();
+
+        Assertions.assertEquals(N, result.size());
+        Assertions.assertEquals(expected, result);
+    }
+
+
+
+    static boolean sleep(long millis) {
         try {
             Thread.sleep(millis);
+            return true;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+
+        return false;
+    }
+
+    public static void log(String value) {
+        // output
+        System.out.println("["
+            + new SimpleDateFormat("yyyy-MM-dd, HH:mm:ss.SSS")
+            .format(new Date()) + "]: " + value);
     }
 }

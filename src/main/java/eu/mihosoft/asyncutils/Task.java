@@ -117,6 +117,14 @@ public class Task <T> {
     }
 
     /**
+     * Returns the task as completable future.
+     * @return the task as completable future
+     */
+    public CompletableFuture<Task<T>> asFuture() {
+        return result.thenApply((r) -> this);
+    }
+
+    /**
      * Telemetry information as completable future.
      * @return telemetry information as completable future
      */

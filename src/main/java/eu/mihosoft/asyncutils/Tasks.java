@@ -77,4 +77,27 @@ public final class Tasks {
         var elements = Arrays.stream(groups).map(g -> g.asFuture()).toArray(CompletableFuture[]::new);
         return (T) CompletableFuture.anyOf(elements).join();
     }
+
+    /**
+     * Awaits all specified task groups.
+     * @param groups groups to wait for
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> List<T> awaitAll(Task... groups) {
+        var elements = Arrays.stream(groups).map(g -> g.getResult()).toArray(CompletableFuture[]::new);
+        return CompletableFuture.allOf(elements)
+            .thenApply(v -> Arrays.stream(elements).map(e -> (T) e.join()).toList()).join();
+    }
+
+    /**
+     * Waits for any of the specified task groups (just a single one is enough).
+     * @param groups groups to wait for
+     * @param <T> return type of the first task that completes
+     * @return return value (of the first task that completes)
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T awaitAny(Task... groups) {
+        var elements = Arrays.stream(groups).map(g -> g.getResult()).toArray(CompletableFuture[]::new);
+        return (T) CompletableFuture.anyOf(elements).join();
+    }
 }

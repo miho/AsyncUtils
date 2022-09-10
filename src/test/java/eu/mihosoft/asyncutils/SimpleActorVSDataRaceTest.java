@@ -48,7 +48,7 @@ public class SimpleActorVSDataRaceTest {
                     return 0;
                 });
             }
-        }).await();
+        }).awaitAll();
 
         System.out.println("increment calls submitted.");
         System.out.println("N: %d, SUM: %d".formatted(N, counter.getValue()));
@@ -76,7 +76,7 @@ public class SimpleActorVSDataRaceTest {
             for(int i = 0; i < N; i++) {
                 g.async(() -> a.callAsync("inc")); // data race prevented by actor
             }
-        }).await();
+        }).awaitAll();
 
         System.out.println("increment calls submitted.");
         System.out.println("calling getValue()...");
