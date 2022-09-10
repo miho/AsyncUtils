@@ -552,6 +552,9 @@ public final class Executor {
         try {
             setState(State.TERMINATING);
             boolean success = executor.awaitTermination(terminationTimeout, TimeUnit.MILLISECONDS);
+
+            asFuture().join();
+
             if (success) {
                 setState(State.TERMINATED);
             } else {
