@@ -40,7 +40,7 @@ Tasks.group(g -> {
     for(int i = 0; i < N; i++) {
        g.async(()->doSomethingThatTakesAWhile()); // runs concurrently
     }
-}).await();
+}).awaitAll();
 
 // continues after all tasks have been executed
 ```
