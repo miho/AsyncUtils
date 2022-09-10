@@ -52,6 +52,10 @@ tasks.withType(JavaCompile) {
 tasks.withType(Javadoc) {
     options.addStringOption('Xdoclint:none', '-quiet')
     options.encoding = 'UTF-8'
+
+    javadocTool = javaToolchains.javadocToolFor {
+        languageVersion = JavaLanguageVersion.of(18)
+    }
 }
 
 wrapper {
