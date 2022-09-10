@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class SimpleActorVSDataRaceTest {
 
-    private static final int N = 1_000;
+    private static final int N = 10_000;
     private static final int P =    16;
 
     @Test
