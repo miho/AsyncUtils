@@ -69,7 +69,7 @@ public class ExecutorTest {
 
         executor.start();
 
-        CompletableFuture.delayedExecutor(100, TimeUnit.MILLISECONDS).execute(()-> {
+        CompletableFuture.runAsync(()-> {
             for(int i = 0; i < N; i++) {
                 final int finalI = i;
                 var t = executor.submit(() -> sleep(100));
@@ -84,7 +84,7 @@ public class ExecutorTest {
                     return null;
                 });
             }
-        });
+        }).join();
 
         CompletableFuture.delayedExecutor(300, TimeUnit.MILLISECONDS).execute(()-> {
             log("cancelling executor");
