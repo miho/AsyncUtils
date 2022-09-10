@@ -34,7 +34,7 @@ import static eu.mihosoft.asyncutils.TaskScopeTest.log;
 
 public class ExecutorTest {
 
-    @RepeatedTest(15)
+    @RepeatedTest(1500)
     public void executorStartAndStopTest() {
 
         // number of tasks
@@ -55,7 +55,7 @@ public class ExecutorTest {
         var f = new CompletableFuture<Boolean>();
 
         executor.registerOnStateChanged(evt -> {
-            log(evt.oldState().name()+"->"+evt.newState().name());
+            //log(evt.oldState().name()+"->"+evt.newState().name());
 
             if(evt.isTerminatedEvent()) {
                 f.complete(true);
@@ -65,17 +65,17 @@ public class ExecutorTest {
         executor.start();
 
         var submittedF = new CompletableFuture<>();
-        CompletableFuture.delayedExecutor(100, TimeUnit.MILLISECONDS).execute(()-> {
+        executor.submit(()-> {
 
             for(int i = 0; i < N; i++) {
                 final int finalI = i;
                 executor.submit(() -> sleep(100)).getResult().handleAsync((unused, throwable) -> {
                     if(throwable!=null) {
                         cancellationCounter.incrementAndGet();
-                        log("cancelled: " + finalI);
+                        //log("cancelled: " + finalI);
                     } else {
                         completionCounter.incrementAndGet();
-                        log("done:      " + finalI);
+                        //log("done:      " + finalI);
                     }
                     return null;
                 });
