@@ -9,8 +9,11 @@ Sharing mutable state is usually avoided in concurrent programming. We use actor
 impact of shared mutable state. Currently, there's only a reflection based actor. It will serve as 
 prototype for [VMF](https://github.com/miho/VMF) actors currently in development.
 
+Furthermore, this project uses virtual threads if available (either via `--enable-preview` or if virtual threads are officially supported). 
+The availability of the API is automatically detected at runtime. See [Project Loom](https://openjdk.java.net/projects/loom/) for details on virtual threads and the progress on structured concurrency.
 
-*WARNING:* WIP, needs [Project Loom](https://openjdk.java.net/projects/loom/) to unleash its full potential. The API might change over time.
+
+*WARNING:* WIP, the API might change over time.
 
 ## Structured concurrency with Task Groups
 
