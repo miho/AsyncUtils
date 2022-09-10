@@ -29,17 +29,16 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Thread.sleep;
 
-public class TaskGroupTest {
+public class TaskScopeTest {
 
     private static final int N = 30;
 
     @Test
-    public void taskGroupTest() {
+    public void taskScopeTest() {
 
         var counter = new AtomicInteger();
 
@@ -92,7 +91,7 @@ public class TaskGroupTest {
 
         var taskIdx = 3;
 
-        var completedIdx = (Integer)TaskGroup.group(g->{
+        var completedIdx = (Integer) TaskScope.scope(g->{
             for(int i = 0; i < N; i++) {
                 System.out.println("submitting task " + i);
                 final int finalI = i;
@@ -113,7 +112,7 @@ public class TaskGroupTest {
         List<Integer> expected = new ArrayList<>();
 
         System.out.println("> submitting tasks & awaiting all");
-        List<Task<?>> tasks = TaskGroup.group(g->{
+        List<Task<?>> tasks = TaskScope.scope(g->{
         for(int i = 0; i < N; i++) {
             System.out.println("  -> submitting task " + i);
             expected.add(i);

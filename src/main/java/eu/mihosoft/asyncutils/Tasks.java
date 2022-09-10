@@ -41,8 +41,8 @@ public final class Tasks {
      * @param consumer consumer for creating tasks in this group
      * @return task group created by this method
      */
-    public static TaskGroup group(Consumer<TaskGroup> consumer) {
-        return TaskGroup.group(consumer);
+    public static TaskScope group(Consumer<TaskScope> consumer) {
+        return TaskScope.scope(consumer);
     }
 
     /**
@@ -51,8 +51,8 @@ public final class Tasks {
      * @param consumer consumer for creating tasks in this group
      * @return task group created by this method
      */
-    public static TaskGroup group(int numThreads, Consumer<TaskGroup> consumer) {
-        return TaskGroup.group(numThreads, consumer);
+    public static TaskScope group(int numThreads, Consumer<TaskScope> consumer) {
+        return TaskScope.scope(numThreads, consumer);
     }
 
     /**
@@ -60,7 +60,7 @@ public final class Tasks {
      * @param groups groups to wait for
      */
     @SuppressWarnings("unchecked")
-    public static <T> List<T> awaitAll(TaskGroup... groups) {
+    public static <T> List<T> awaitAll(TaskScope... groups) {
         var elements = Arrays.stream(groups).map(g -> g.asFuture()).toArray(CompletableFuture[]::new);
         return CompletableFuture.allOf(elements)
             .thenApply(v -> Arrays.stream(elements).map(e -> (T) e.join()).toList()).join();
@@ -73,7 +73,7 @@ public final class Tasks {
      * @return return value (of the first task that completes)
      */
     @SuppressWarnings("unchecked")
-    public static <T> T awaitAny(TaskGroup... groups) {
+    public static <T> T awaitAny(TaskScope... groups) {
         var elements = Arrays.stream(groups).map(g -> g.asFuture()).toArray(CompletableFuture[]::new);
         return (T) CompletableFuture.anyOf(elements).join();
     }

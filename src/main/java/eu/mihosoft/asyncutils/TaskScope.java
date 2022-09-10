@@ -28,20 +28,20 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 /**
- * Group of tasks.
+ * Task scope that scopes tasks.
  */
-public final class TaskGroup {
+public final class TaskScope {
     private final Executor executor;
     private final BlockingQueue<Task<?>> queue;
     private final String name;
     private volatile boolean accepting;
 
-    private TaskGroup(String name, int numThreads) {
+    private TaskScope(String name, int numThreads) {
         this(name, Executor.newInstance(numThreads));
     }
 
-    private TaskGroup(String name, Executor executor) {
-        this.name = name==null?"unnamed-group<"+System.identityHashCode(this)+">":name;
+    private TaskScope(String name, Executor executor) {
+        this.name = name==null?"unnamed-scope<"+System.identityHashCode(this)+">":name;
         this.executor = executor;
         queue = new LinkedBlockingQueue<>();
         accepting = true;
@@ -49,7 +49,7 @@ public final class TaskGroup {
 
     /**
      *
-     * @return name of this task group
+     * @return name of this task scope
      */
     public String getName() {
         return name;
@@ -81,7 +81,7 @@ public final class TaskGroup {
      * @return task created by this method
      */
     public <V> Task<V> async(Task<V> t) {
-        if(!accepting) throw new RejectedExecutionException("This group does not accept tasks.");
+        if(!accepting) throw new RejectedExecutionException("This scope does not accept tasks.");
         try {
             queue.put(t);
         } catch (InterruptedException ex) {
@@ -91,7 +91,7 @@ public final class TaskGroup {
     }
 
     /**
-     * Cancels this task group (the internal executor).
+     * Cancels this task scope (the internal executor).
      * @see Executor#cancel()
      */
     public void cancel() {
@@ -99,7 +99,7 @@ public final class TaskGroup {
     }
 
     /**
-     * stops this task group (the internal executor).
+     * stops this task scope (the internal executor).
      * @see Executor#stop()
      */
     public void stop() {
@@ -107,10 +107,11 @@ public final class TaskGroup {
     }
 
     /**
-     * Awaits all specified task groups.
+     * Awaits all specified task scopes.
      * @return list of results of all completed tasks
      */
     public List<Task<?>> awaitAll() {
+
         var elements = tasks().stream().map(t -> t.getResult()).toArray(CompletableFuture[]::new);
         CompletableFuture.allOf(elements)
             .thenApply(v -> Arrays.stream(elements).map(e -> e.join()).toList()).join();
@@ -131,8 +132,8 @@ public final class TaskGroup {
     }
 
     /**
-     * Tasks contained in this group.
-     * @return list of tasks contained in this group
+     * Tasks contained in this scope.
+     * @return list of tasks contained in this scope
      */
     public List<Task<?>> tasks() {
         return queue.stream().toList();
@@ -147,43 +148,43 @@ public final class TaskGroup {
     }
 
     /**
-     * Creates a new task group.
-     * @param consumer consumer for creating tasks in this group
-     * @return task group created by this method
+     * Creates a new task scope.
+     * @param consumer consumer for creating tasks in this scope
+     * @return task scope created by this method
      */
-    public static TaskGroup group(Consumer<TaskGroup> consumer) {
-        return group(null, 0 /*cached executor*/, consumer);
+    public static TaskScope scope(Consumer<TaskScope> consumer) {
+        return scope(null, 0 /*cached executor*/, consumer);
     }
 
     /**
-     * Creates a new task group.
+     * Creates a new task scope.
      * @param numThreads number of threads to use
-     * @param consumer consumer for creating tasks in this group
-     * @return task group created by this method
+     * @param consumer consumer for creating tasks in this scope
+     * @return task scope created by this method
      */
-    public static TaskGroup group(int numThreads, Consumer<TaskGroup> consumer) {
-        return group(null, numThreads, consumer);
+    public static TaskScope scope(int numThreads, Consumer<TaskScope> consumer) {
+        return scope(null, numThreads, consumer);
     }
 
     /**
-     * Creates a new task group.
-     * @param name name of the group to create
-     * @param consumer consumer for creating tasks in this group
-     * @return task group created by this method
+     * Creates a new task scope.
+     * @param name name of the scope to create
+     * @param consumer consumer for creating tasks in this scope
+     * @return task scope created by this method
      */
-    public static TaskGroup group(String name, Consumer<TaskGroup> consumer) {
-        return group(name, 0/*cached executor*/, consumer);
+    public static TaskScope scope(String name, Consumer<TaskScope> consumer) {
+        return scope(name, 0/*cached executor*/, consumer);
     }
 
     /**
-     * Creates a new task group.
-     * @param name name of the group to create
-     * @param consumer consumer for creating tasks in this group
-     * @param executor executor for running tasks in this group
-     * @return task group created by this method
+     * Creates a new task scope.
+     * @param name name of the scope to create
+     * @param consumer consumer for creating tasks in this scope
+     * @param executor executor for running tasks in this scope
+     * @return task scope created by this method
      */
-    public static TaskGroup group(String name, Consumer<TaskGroup> consumer, Executor executor) {
-        var fg = new TaskGroup(name, executor);
+    public static TaskScope scope(String name, Consumer<TaskScope> consumer, Executor executor) {
+        var fg = new TaskScope(name, executor);
         fg.executor.start();
         try {
             consumer.accept(fg);
@@ -196,15 +197,15 @@ public final class TaskGroup {
     }
 
     /**
-     * Creates a new task group.
-     * @param name name of the group to create
+     * Creates a new task scope.
+     * @param name name of the scope to create
      * @param numThreads number of threads to use
-     * @param consumer consumer for creating tasks in this group
-     * @return task group created by this method
+     * @param consumer consumer for creating tasks in this scope
+     * @return task scope created by this method
      */
-    public static TaskGroup group(String name, int numThreads, Consumer<TaskGroup> consumer) {
+    public static TaskScope scope(String name, int numThreads, Consumer<TaskScope> consumer) {
 
-        var fg = new TaskGroup(name, numThreads);
+        var fg = new TaskScope(name, numThreads);
         fg.executor.start();
         try {
             consumer.accept(fg);

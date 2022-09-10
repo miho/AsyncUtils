@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static eu.mihosoft.asyncutils.TaskGroupTest.log;
+import static eu.mihosoft.asyncutils.TaskScopeTest.log;
 
 public class ExecutorTest {
 

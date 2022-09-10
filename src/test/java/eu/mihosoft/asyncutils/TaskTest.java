@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static eu.mihosoft.asyncutils.TaskGroupTest.sleep;
+import static eu.mihosoft.asyncutils.TaskScopeTest.sleep;
 
 public class TaskTest {
 
