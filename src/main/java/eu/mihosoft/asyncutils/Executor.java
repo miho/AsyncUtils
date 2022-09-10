@@ -42,6 +42,8 @@ import java.util.function.Consumer;
  */
 public final class Executor {
 
+    final AtomicReference<TaskScope> scope = new AtomicReference<>();
+
     private final BlockingQueue<Task<?>> queue;
     private final int numThreads;
     private final ReentrantLock lock = new ReentrantLock();

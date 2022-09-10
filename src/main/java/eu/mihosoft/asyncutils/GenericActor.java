@@ -52,9 +52,9 @@ import java.util.List;
  * {@snippet :
  * int N = 1000;
  * var counter = new Counter();
- * Tasks.scope(P, g -> {
+ * Tasks.scope(s -> {
  *   for (int i = 0; i < N; i++) {
- *     g.async(() -> {
+ *     s.async(() -> {
  *        counter.inc(); // data race
  *     });
  *   }
@@ -71,9 +71,9 @@ import java.util.List;
  * {@snippet :
  * int N = 1000;
  * var counter = GenericActor.newInstance(new Counter());
- * Tasks.scope(P, g -> {
+ * Tasks.scope(s -> {
  *   for (int i = 0; i < N; i++) {
- *     g.async(() -> {
+ *     s.async(() -> {
  *        counter.callAsync("inc");
  *     });
  *   }

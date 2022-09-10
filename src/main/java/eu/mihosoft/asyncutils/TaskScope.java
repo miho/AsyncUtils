@@ -33,9 +33,9 @@ import java.util.function.Consumer;
  *
  * <p>
  * {@snippet :
- * var results = Tasks.scope(g->{
+ * var results = Tasks.scope(s->{
  *   for(int i=0;i<N; i++){
- *     g.async(()->doSomethingThatTakesAWhile()); // runs concurrently
+ *     s.async(()->doSomethingThatTakesAWhile()); // runs concurrently
  *   }
  * }).awaitAll();
  *
@@ -46,9 +46,9 @@ import java.util.function.Consumer;
  * Another usage example (wait for <b>any</b> task to finish):
  *
  * {@snippet :
- * var results = Tasks.scope(g->{
+ * var results = Tasks.scope(s->{
  *   for(int i=0;i<N; i++){
- *     g.async(()->doSomethingThatTakesAWhile()); // runs concurrently
+ *     s.async(()->doSomethingThatTakesAWhile()); // runs concurrently
  *   }
  * }).awaitAny();
  *
@@ -69,6 +69,10 @@ public final class TaskScope {
 
     private TaskScope(String name, Executor executor) {
         this.name = name==null?"unnamed-scope<"+System.identityHashCode(this)+">":name;
+        TaskScope parent = null;
+        if((parent = executor.scope.getAndSet(this))!=null) {
+            throw new IllegalStateException("Executor is already in use by another scope: " + parent);
+        }
         this.executor = executor;
         queue = new LinkedBlockingQueue<>();
         accepting = true;
@@ -224,20 +228,20 @@ public final class TaskScope {
      * Creates a new task scope.
      * @param name name of the scope to create
      * @param consumer consumer for creating tasks in this scope
-     * @param executor executor for running tasks in this scope
+     * @param executor executor for running tasks in this scope (can only be used by one scope)
      * @return task scope created by this method
      */
     public static TaskScope scope(String name, Consumer<TaskScope> consumer, Executor executor) {
-        var fg = new TaskScope(name, executor);
-        fg.executor.start();
+        var scope = new TaskScope(name, executor);
+        scope.executor.start();
         try {
-            consumer.accept(fg);
+            consumer.accept(scope);
         } finally {
-            fg.accepting = false;
-            fg.executor.stopAsync();
+            scope.accepting = false;
+            scope.executor.stopAsync();
         }
 
-        return fg;
+        return scope;
     }
 
     /**
@@ -249,15 +253,15 @@ public final class TaskScope {
      */
     public static TaskScope scope(String name, int numThreads, Consumer<TaskScope> consumer) {
 
-        var fg = new TaskScope(name, numThreads);
-        fg.executor.startIfNotRunning();
+        var scope = new TaskScope(name, numThreads);
+        scope.executor.startIfNotRunning();
         try {
-            consumer.accept(fg);
+            consumer.accept(scope);
         } finally {
-            fg.accepting = false;
-            fg.executor.stopAsync();
+            scope.accepting = false;
+            scope.executor.stopAsync();
         }
 
-        return fg;
+        return scope;
     }
 }
