@@ -34,7 +34,7 @@ import static eu.mihosoft.asyncutils.TaskScopeTest.log;
 
 public class ExecutorTest {
 
-    @RepeatedTest(1500)
+    @RepeatedTest(15)
     public void executorStartAndStopTest() {
 
         // number of tasks
