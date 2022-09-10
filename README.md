@@ -49,4 +49,18 @@ Of course, we could use Streams, Fork-Join APIs and Futures. But either the APIs
 or they lack features such as control over how exceptions are handled or how to specify how many threads should be 
 used to process the tasks.
 
+Task objects provide sophisitcated telemetry information:
+
+```java
+
+var t = executor.submit(()->{...});
+
+t.telemetry().thenAccapt((t)->{
+    System.out.println(t);
+});
+
+t.getResult().join();
+
+
+```
 
