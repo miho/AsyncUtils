@@ -15,7 +15,7 @@ The availability of the API is automatically detected at runtime. See [Project L
 
 *WARNING:* WIP, the API might change over time.
 
-## Structured concurrency with Task Groups
+## Structured concurrency with TaskScopes
 
 Consider the following code:
 
@@ -36,9 +36,9 @@ Here's how we can perform the method calls inside the loop concurrently:
 ```java
 // concurrent
 System.out.println("starting concurrent:");
-Tasks.group(g -> {
+Tasks.scope(s -> {
     for(int i = 0; i < N; i++) {
-       g.async(()->doSomethingThatTakesAWhile()); // runs concurrently
+       s.async(()->doSomethingThatTakesAWhile()); // runs concurrently
     }
 }).awaitAll();
 
@@ -61,4 +61,58 @@ t.getTelemetry().thenAccept((t)->{
 t.getResult().join(); // wait for the task to finish
 
 ```
+
+## Preventing data races with generic Actors
+
+A generic actor class that uses a serial execution model to process the method calls (i.e., the method calls are executed in the order they are received). Each method call returns a task object that provides the same telemetry information as shown above.
+
+The following example shows how to use this class to prevent data races for a simple counter class.
+
+First, consider the following counter class:
+
+```java
+class Counter {
+  private int v;
+  
+  public void inc() {v++;}
+  public void dec() {v--;}
+  public int getValue() {return v;}
+  }
+
+Calling the methods of this class concurrently will result in data races. the code snippet below demonstrates this:
+
+```java
+int N = 1000;
+var counter = new Counter();
+Tasks.scope(scope -> {
+for (int i = 0; i < N; i++) {
+  scope.async(() -> {
+    counter.inc(); // data race
+  });
+}
+}).awaitAll();
+
+// since we produce data races, the values shouldn't match
+assertNotEquals(N, counter.getValue());
+```
+
+This can simply be prevented by using an actor instead:
+
+```java
+int N = 1000;
+var counter = GenericActor.newInstance(new Counter());
+Tasks.scope(scope -> {
+  for (int i = 0; i < N; i++) {
+    scope.async(() -> {
+      counter.callAsync("inc");
+    });
+  }
+}).awaitAll();
+
+// since we produce no data races, the values should match
+assertEquals(N, counter.getValue());
+```
+
+
+
 
