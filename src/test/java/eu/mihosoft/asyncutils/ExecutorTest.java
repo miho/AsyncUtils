@@ -75,7 +75,7 @@ public class ExecutorTest {
             for(int i = 0; i < N; i++) {
                 final int finalI = i;
                 var t = executor.submit(() -> sleep(100));
-                t.getResult().handleAsync((unused, throwable) -> {
+                t.getResult().handle((unused, throwable) -> {
                     if(throwable!=null) {
                         cancellationCounter.incrementAndGet();
                         log("cancelled: " + finalI);
