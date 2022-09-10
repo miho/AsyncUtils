@@ -443,10 +443,9 @@ public final class Executor {
             setState(State.CANCELLED);
             setState(State.SHUTTING_DOWN);
             if(executor!=null && isRunning()) executor.shutdownNow(); // TOTO should we process remaining tasks?
-            var f = asFuture(); // get future prior to clearing the queue
             queue.clear();
             setState(State.SHUTDOWN);
-            terminating(f);
+            terminating();
             executor = null;
         } catch(Exception ex) {
             setState(State.ERROR);
@@ -482,9 +481,8 @@ public final class Executor {
         }
         try {
             if (executor != null && isRunning()) executor.shutdown();
-            var f = asFuture();
             setState(State.SHUTDOWN);
-            terminating(f); // should already be shut down
+            terminating(); // should already be shut down
         } catch(Exception ex) {
             setState(State.ERROR);
         } finally {
@@ -549,18 +547,11 @@ public final class Executor {
         return CompletableFuture.allOf(futures);
     }
 
-    private void terminating(CompletableFuture<?> taskFuture) {
+    private void terminating() {
         lock.lock();
         try {
             setState(State.TERMINATING);
             boolean success = executor.awaitTermination(terminationTimeout, TimeUnit.MILLISECONDS);
-
-            try {
-                taskFuture.orTimeout(terminationTimeout, TimeUnit.MILLISECONDS).join();
-            } catch (CancellationException | CompletionException exception) {
-                // ignore
-            }
-
             if (success) {
                 setState(State.TERMINATED);
             } else {
