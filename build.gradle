@@ -3,6 +3,10 @@ import java.text.SimpleDateFormat
 // enable intellij integration & load vmf version to be used
 buildscript {
 
+    ext.commonProps = new Properties()
+    file(new File(rootProject.getRootDir(),"config/common.properties")).
+            withInputStream { {commonProps.load(it) }}
+
     ext.vmfPluginIntelliJIntegration = true
 
     repositories {
@@ -10,7 +14,7 @@ buildscript {
     }
 
     dependencies {
-        classpath "eu.mihosoft.vmf:vmf-gradle-plugin:0.2.8.6"
+        classpath "eu.mihosoft.vmf:vmf-gradle-plugin:${project.commonProps.get('vmf.version')}"
     }
 }
 
@@ -29,7 +33,7 @@ apply plugin: 'eu.mihosoft.vmf'
 idea {
     module {
         dependencies {
-            implementation group: 'eu.mihosoft.vmf', name: 'vmf', version: '0.2.8.6'
+            implementation group: 'eu.mihosoft.vmf', name: 'vmf', version: "${project.commonProps.get('vmf.version')}"
         }
     }
 }
@@ -58,8 +62,8 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
 }
 
 jar {

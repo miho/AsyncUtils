@@ -2,7 +2,7 @@
 // publishing information
 // -----------------------------------------------------------------------------
 ext.publishingInfo.artifactId =  project.name.toLowerCase()
-ext.publishingInfo.groupId    =  'eu.mihosoft.concurrencyutils'
+ext.publishingInfo.groupId    =  'eu.mihosoft.asyncutils'
 ext.publishingInfo.versionId  =  ext.commonProps.get("publication.version")
 
 ext.publishingInfo.developerName         = 'Michael Hoffer'
@@ -10,13 +10,13 @@ ext.publishingInfo.developerAlias        = 'miho'
 ext.publishingInfo.developerEmail        = 'info@michaelhoffer.de'
 ext.publishingInfo.inceptionYear         = '2022'
 
-ext.publishingInfo.desc                  = 'Concurrency utilities.'
+ext.publishingInfo.desc                  = 'Async utilities. Tasks, Actors, reusable Executors, etc.'
 ext.publishingInfo.license               = 'Apache-2.0'
-ext.publishingInfo.licenseUrl            = 'https://github.com/miho/ConcurrencyUtils/blob/master/LICENSE'
-ext.publishingInfo.labels                = ['concurrency', 'async', 'await', 'virtual threads', 'project loom', 'actors', 'streams' , 'vmf', 'vrl', 'modeling framework']
-ext.publishingInfo.websiteUrl            = 'https://github.com/miho/ConcurrencyUtils'
-ext.publishingInfo.issueTrackerUrl       = 'https://github.com/miho/ConcurrencyUtils/issues'
-ext.publishingInfo.vcsUrl                = 'https://github.com/miho/ConcurrencyUtils.git'
+ext.publishingInfo.licenseUrl            = 'https://github.com/miho/AsyncUtils/blob/master/LICENSE'
+ext.publishingInfo.labels                = ['structured concurrency', 'async', 'await', 'virtual threads', 'project loom', 'actors', 'streams' , 'vmf', 'vrl', 'modeling framework']
+ext.publishingInfo.websiteUrl            = 'https://github.com/miho/AsyncUtils'
+ext.publishingInfo.issueTrackerUrl       = 'https://github.com/miho/AsyncUtils/issues'
+ext.publishingInfo.vcsUrl                = 'https://github.com/miho/AsyncUtils.git'
 
 ext.publishingInfo.gitHubMavenRepo       = "https://maven.pkg.github.com/miho/ConcurrencyUtils"
 
