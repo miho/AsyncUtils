@@ -114,7 +114,7 @@ Tasks.scope(scope -> {
 }).awaitAll();
 
 // since we produce no data races, the values should match
-assertEquals(N, counter.getValue());
+assertEquals(N, counter.call("getValue"));
 ```
 
 
