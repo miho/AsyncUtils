@@ -139,11 +139,11 @@ public class GenericActor<T> {
      */
     public <V> Task<V> callAsync(String method, List<Object> args) {
 
-        Expression methodCallExpression = new Expression(object, method, args.toArray(new Object[args.size()]));
 
         return executor.submit(Task.newInstance(
-            name+":method<"+method+","+System.identityHashCode(methodCallExpression)+">",
+            name+":method<"+method+">",
             () -> {
+                Expression methodCallExpression = new Expression(object, method, args.toArray(new Object[args.size()]));
                 methodCallExpression.execute();
                 return (V)methodCallExpression.getValue();
             }
