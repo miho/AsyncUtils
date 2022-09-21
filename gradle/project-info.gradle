@@ -18,6 +18,6 @@ ext.publishingInfo.websiteUrl            = 'https://github.com/miho/AsyncUtils'
 ext.publishingInfo.issueTrackerUrl       = 'https://github.com/miho/AsyncUtils/issues'
 ext.publishingInfo.vcsUrl                = 'https://github.com/miho/AsyncUtils.git'
 
-ext.publishingInfo.gitHubMavenRepo       = "https://maven.pkg.github.com/miho/ConcurrencyUtils"
+ext.publishingInfo.gitHubMavenRepo       = "https://maven.pkg.github.com/miho/AsyncUtils"
 
 ext.publishingInfo.pomName               =  ext.publishingInfo.artifactId
