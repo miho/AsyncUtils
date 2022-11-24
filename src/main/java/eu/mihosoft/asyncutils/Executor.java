@@ -473,8 +473,8 @@ public final class Executor {
      */
     public void stop() {
         try {
-            setState(State.SHUTTING_DOWN);
             lock.lock();
+            setState(State.SHUTTING_DOWN);
         } catch(Exception ex) {
             setState(State.ERROR);
             throw ex;
