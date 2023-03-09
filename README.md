@@ -5,7 +5,7 @@
 tasks, async, await, actors and more for java
 
 This project tries to explore several approaches to simplify async/concurrent programming in Java.
-AsyncUtils basically consits of distilled versions of patterns that I implemented over the past years. 
+AsyncUtils basically consists of distilled versions of patterns that I implemented over the past years. 
 The purpose isn't best-in class performance but rather reliability. 
 
 Sharing mutable state is usually avoided in concurrent programming. We use actors to reduce the negative
