@@ -22,6 +22,9 @@
  */
 package eu.mihosoft.asyncutils;
 
+import org.tinylog.Logger;
+
+import java.io.ByteArrayOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.Executors;
@@ -90,12 +93,44 @@ public final class VirtualThreadUtils {
      * @return {@code true} if virtual threads are supported; {@code false} otherwise
      */
     private static boolean testIfVirtualThreadsAreSupported() {
-        if(!isJavaVersionAtLeast("19")) return false;
+        boolean versionAtLeast19 = isJavaVersionAtLeast("19");
+
+        if(!versionAtLeast19) {
+            Logger.tag("AsyncUtils").info("Java 19 or higher required for virtual threads. Using regular threads instead.");
+            return false;
+        }
+
+        boolean versionAtLeast21 = isJavaVersionAtLeast("21");
+
+        if (versionAtLeast21) {
+            Logger.tag("AsyncUtils").info("Java 21 or higher detected. Virtual threads are supported.");
+            return true;
+        }
+
+        Logger.tag("AsyncUtils").info("Java 19 or higher detected. Testing if virtual threads are supported...");
 
         try {
             newVirtualThreadFactory(); // just for testing
+
+            Logger.tag("AsyncUtils").info("Virtual threads are supported.");
+
             return true;
         } catch (Throwable throwable) {
+
+            // stacktrace to string
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try (var pw = new java.io.PrintWriter(baos)) {
+                throwable.printStackTrace(pw);
+            }
+            String stacktrace = baos.toString();
+
+            if(stacktrace.toLowerCase().contains("preview features not enabled")) {
+                Logger.tag("AsyncUtils").warn("Virtual threads are not supported. Please start the JVM with the --enable-preview flag. Using regular threads instead.");
+                return false;
+            }
+
+            Logger.tag("AsyncUtils").warn(throwable,"Virtual threads are not supported. Using regular threads instead.");
+
             return false;
         }
 
@@ -113,6 +148,10 @@ public final class VirtualThreadUtils {
     private static ThreadFactory newVirtualThreadFactory() throws NoSuchMethodException, IllegalAccessException,
         InvocationTargetException {
 
+        if (isJavaVersionAtLeast("21")) {
+            return Thread.ofVirtual().factory();
+        }
+
         // use reflection to call the method since we don't want
         // to depend on preview features
 
@@ -122,13 +161,18 @@ public final class VirtualThreadUtils {
         Object ofVirtual = ofVirtualMethod.invoke(null);
 
         // get the base class of the virtualClass with Reflection API
-        // we would get a classnotfound-exception or similar if we
+        // we would get a class-not-found-exception or similar if we
         // would use ofVirtual.getClass() instead of the super-class
-        Class<?> ofVirtualClass = ofVirtual.getClass().getSuperclass();
-
-        // call factory() with Reflection API
-        Method factoryMethod = ofVirtualClass.getMethod("factory");
-        ThreadFactory factory = (ThreadFactory) factoryMethod.invoke(ofVirtual);
+        ThreadFactory factory;
+        try {
+            Class<?> ofVirtualClass = ofVirtual.getClass();
+            var factoryMethod = ofVirtualClass.getMethod("factory");
+            factory = (ThreadFactory) factoryMethod.invoke(ofVirtual);
+        } catch (Throwable t) {
+            Class<?> ofVirtualClass = ofVirtual.getClass().getSuperclass();
+            var factoryMethod = ofVirtualClass.getMethod("factory");
+            factory = (ThreadFactory) factoryMethod.invoke(ofVirtual);
+        }
 
         return factory;
     }
@@ -145,6 +189,9 @@ public final class VirtualThreadUtils {
                 return newVirtualThreadFactory();
 
             } catch (Throwable e) {
+
+                Logger.tag("AsyncUtils").warn(e,"Virtual threads are not supported. Using regular threads instead.");
+
                 return (r) -> new Thread(r);
             }
         } else {
