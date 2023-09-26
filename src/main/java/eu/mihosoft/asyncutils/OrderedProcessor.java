@@ -76,8 +76,12 @@ public class OrderedProcessor<Tin, Tout> {
      * Adds an item to be processed.
      *
      * @param data The item to be processed.
+     * @throws IllegalStateException if the processor is shut down.
      */
     public void addData(Tin data) {
+        if(isShutdown.get()) {
+            throw new IllegalStateException("Cannot add data to a shut-down processor. Create a new processor instead.");
+        }
         inputLock.lock();
         try {
             inputQueue.add(new Item<>(nextSeqNum.getAndIncrement(), data));
