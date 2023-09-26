@@ -24,6 +24,7 @@ package eu.mihosoft.asyncutils;
 
 import org.tinylog.Logger;
 
+import java.beans.Expression;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -145,36 +146,22 @@ public final class VirtualThreadUtils {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    private static ThreadFactory newVirtualThreadFactory() throws NoSuchMethodException, IllegalAccessException,
-        InvocationTargetException {
+    private static ThreadFactory newVirtualThreadFactory() throws Exception {
 
-        if (isJavaVersionAtLeast("21")) {
-            return Thread.ofVirtual().factory();
-        }
+//        if (isJavaVersionAtLeast("21")) {
+//            return Thread.ofVirtual().factory();
+//        }
 
-        // use reflection to call the method since we don't want
-        // to depend on preview features
+        java.beans.Expression expression = new java.beans.Expression(Thread.class, "ofVirtual", new Object[0]);
 
-        // call Thread.ofVirtual() with Reflection API
-        Method ofVirtualMethod = Thread.class.getMethod("ofVirtual");
+        Object ofVirtual = expression.getValue();
 
-        Object ofVirtual = ofVirtualMethod.invoke(null);
+        // now call factory() on the ofVirtual object
+        expression = new java.beans.Expression(ofVirtual, "factory", new Object[0]);
 
-        // get the base class of the virtualClass with Reflection API
-        // we would get a class-not-found-exception or similar if we
-        // would use ofVirtual.getClass() instead of the super-class
-        ThreadFactory factory;
-        try {
-            Class<?> ofVirtualClass = ofVirtual.getClass();
-            var factoryMethod = ofVirtualClass.getMethod("factory");
-            factory = (ThreadFactory) factoryMethod.invoke(ofVirtual);
-        } catch (Throwable t) {
-            Class<?> ofVirtualClass = ofVirtual.getClass().getSuperclass();
-            var factoryMethod = ofVirtualClass.getMethod("factory");
-            factory = (ThreadFactory) factoryMethod.invoke(ofVirtual);
-        }
+        Object factory = expression.getValue();
 
-        return factory;
+        return (ThreadFactory) factory;
     }
 
     /**
@@ -213,6 +200,20 @@ public final class VirtualThreadUtils {
             }
         } else {
             return Executors.newScheduledThreadPool(corePoolSize);
+        }
+    }
+
+    /**
+     * Determines if the given thread is a virtual thread.
+     * @param thread thread to check
+     * @return {@code true} if the given thread is a virtual thread; {@code false} otherwise
+     */
+    public static boolean isVirtual(Thread thread) {
+        try {
+            return (boolean) new Expression(thread,
+                    "isVirtual", null).getValue();
+        } catch (Exception e) {
+            return false;
         }
     }
 
