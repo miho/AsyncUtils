@@ -510,7 +510,7 @@ public final class Executor {
      * @return this executor
      */
     public Executor setTerminationTimeout(long timeout) {
-        this.terminationTimeout = terminationTimeout;
+        this.terminationTimeout = timeout;
         return this;
     }
 
