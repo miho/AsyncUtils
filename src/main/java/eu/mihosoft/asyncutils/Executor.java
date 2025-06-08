@@ -119,7 +119,9 @@ public final class Executor {
     }
 
     /**
-     * Executor event that indicates whether the executor isstarted, cancelled, shotdown or terminated.
+     * Executor event that indicates whether the executor is started, cancelled,
+     * shutdown or terminated.
+     *
      * @param executor the executor
      * @param oldState the old state
      * @param newState the new state
