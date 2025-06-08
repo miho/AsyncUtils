@@ -2,16 +2,25 @@ package eu.mihosoft.asyncutils;
 
 import org.junit.jupiter.api.Test;
 
-import java.beans.Expression;
 import java.util.concurrent.ThreadFactory;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class VirtualThreadUtilsTest {
 
     @Test
-    public void threadFactoryTest() {
+    public void threadFactoryTest() throws InterruptedException {
         ThreadFactory tf = VirtualThreadUtils.newThreadFactory(true);
-        tf.newThread(() -> System.out.println("Thread executing! "
-                + VirtualThreadUtils.isVirtual(Thread.currentThread()))).start();
+
+        Thread thread = tf.newThread(() -> {
+            // no-op
+        });
+
+        boolean isVirtual = VirtualThreadUtils.isVirtual(thread);
+
+        thread.start();
+        thread.join();
+
+        assertEquals(VirtualThreadUtils.areVirtualThreadsSupported(), isVirtual);
     }
 
 }
